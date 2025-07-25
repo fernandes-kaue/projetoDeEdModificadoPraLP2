@@ -1,8 +1,6 @@
 package com.example.clinica_app;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,12 +73,10 @@ public class SistemaAgendamento {
         if (agenda == null) return false;
 
         for (Consulta consulta : agenda.values()) {
-            if (consulta.getIdConsulta().equals(idConsulta) &&
-                    consulta.getMedico().getIdMedico().equals(idMedico)) {
+            if (consulta.getIdConsulta().equals(idConsulta) && consulta.getMedico().getIdMedico().equals(idMedico)) {
 
                 if (consulta.getPaciente() != null) {
-                    if (!"AGENDADA".equals(consulta.getStatus()) &&
-                            !"SOLICITADO".equals(consulta.getStatus())) {
+                    if (!"AGENDADA".equals(consulta.getStatus()) && !"SOLICITADO".equals(consulta.getStatus())) {
                         // Só permite cancelar se estiver AGENDADA ou SOLICITADO
                         return false;
                     }
@@ -116,10 +112,7 @@ public class SistemaAgendamento {
 
     // Retorna todas as consultas de um paciente
     public List<Consulta> getConsultasPaciente(String idPaciente) {
-        return agendas.values().stream()
-                .flatMap(agenda -> agenda.values().stream())
-                .filter(c -> c.getPaciente() != null && c.getPaciente().getIdPaciente().equals(idPaciente))
-                .collect(Collectors.toList());
+        return agendas.values().stream().flatMap(agenda -> agenda.values().stream()).filter(c -> c.getPaciente() != null && c.getPaciente().getIdPaciente().equals(idPaciente)).collect(Collectors.toList());
     }
 
     // Retorna todas as consultas de um médico
@@ -131,9 +124,6 @@ public class SistemaAgendamento {
 
     // Retorna todas as consultas disponíveis
     public List<Consulta> getTodasConsultasDisponiveis() {
-        return agendas.values().stream()
-                .flatMap(agenda -> agenda.values().stream())
-                .filter(consulta -> "DISPONIVEL".equals(consulta.getStatus()))
-                .collect(Collectors.toList());
+        return agendas.values().stream().flatMap(agenda -> agenda.values().stream()).filter(consulta -> "DISPONIVEL".equals(consulta.getStatus())).collect(Collectors.toList());
     }
 }

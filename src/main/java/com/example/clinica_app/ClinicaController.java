@@ -919,39 +919,27 @@ public class ClinicaController {
     private void configurarFormatadorHora(TextField campo) {
         if (campo == null) return;
 
-        // Limita o campo a 5 caracteres (HH:mm)
-        campo.lengthProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.intValue() > 5) {
-                campo.setText(campo.getText().substring(0, 5));
-            }
-        });
-
         campo.setOnAction(e -> {
-            formatarHora(campo);
-            campo.positionCaret(campo.getText().length());
-        });
+            String texto = campo.getText().replaceAll("[^0-9]", "");
 
-        campo.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                formatarHora(campo);
-                campo.positionCaret(campo.getText().length());
-            } else {
-                campo.selectAll();
-            }
-        });
-
-        // Configuração para autoformatação enquanto digita
-        campo.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
-                String digits = newVal.replaceAll("[^0-9]", "");
-
-                if (digits.length() == 2 && oldVal.length() == 1) {
-                    campo.setText(digits + ":");
-                    campo.positionCaret(3);
-                } else if (digits.length() > 4) {
-                    campo.setText(oldVal);
+            try {
+                if (texto.length() == 2) { // HH
+                    int hora = Integer.parseInt(texto);
+                    if (hora >= 0 && hora <= 23) {
+                        campo.setText(String.format("%02d:00", hora));
+                    }
+                } else if (texto.length() == 4) { // HHmm
+                    int hora = Integer.parseInt(texto.substring(0, 2));
+                    int minuto = Integer.parseInt(texto.substring(2));
+                    if (hora >= 0 && hora <= 23 && minuto >= 0 && minuto <= 59) {
+                        campo.setText(String.format("%02d:%02d", hora, minuto));
+                    }
                 }
+            } catch (NumberFormatException ex) {
+                // Mantém o texto como está se não for possível formatar
             }
+
+            campo.positionCaret(campo.getText().length());
         });
     }
 
@@ -980,11 +968,37 @@ public class ClinicaController {
     }
 
     private void configurarFormatadorData(TextField campo) {
-        campo.setOnAction(e -> formatarData(campo));
-        campo.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) { // Quando perde o foco
-                formatarData(campo);
+        if (campo == null) return;
+
+        campo.setOnAction(e -> {
+            String texto = campo.getText().replaceAll("[^0-9]", "");
+            LocalDate hoje = LocalDate.now();
+
+            try {
+                if (texto.length() == 2) { // MM
+                    int mes = Integer.parseInt(texto);
+                    if (mes >= 1 && mes <= 12) {
+                        campo.setText(String.format("%02d/%02d/%d", mes, hoje.getMonthValue(), hoje.getYear()));
+                    }
+                } else if (texto.length() == 4) { // DDMM
+                    int dia = Integer.parseInt(texto.substring(0, 2));
+                    int mes = Integer.parseInt(texto.substring(2));
+                    if (mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31) {
+                        campo.setText(String.format("%02d/%02d/%d", dia, mes, hoje.getYear()));
+                    }
+                } else if (texto.length() == 8) { // DDMMYYYY
+                    int dia = Integer.parseInt(texto.substring(0, 2));
+                    int mes = Integer.parseInt(texto.substring(2, 4));
+                    int ano = Integer.parseInt(texto.substring(4));
+                    if (mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31 && ano > 0) {
+                        campo.setText(String.format("%02d/%02d/%d", dia, mes, ano));
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                // Mantém o texto como está se não for possível formatar
             }
+
+            campo.positionCaret(campo.getText().length());
         });
     }
 

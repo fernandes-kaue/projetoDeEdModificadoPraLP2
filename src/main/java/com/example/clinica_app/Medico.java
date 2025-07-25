@@ -11,7 +11,15 @@ public class Medico {
         this.especialidade = especialidade;
     }
 
-    public String getIdMedico() { return idMedico; }
-    public String getNome() { return nome; }
-    public String getEspecialidade() { return especialidade; }
+    public String getIdMedico() {
+        return idMedico;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getEspecialidade() {
+        return especialidade;
+    }
 }

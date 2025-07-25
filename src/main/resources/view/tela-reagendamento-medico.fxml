@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-<?import javafx.geometry.Insets?>
-<VBox xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController" spacing="10">
+<VBox xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.clinica_app.ClinicaController" spacing="10">
     <padding>
         <Insets bottom="20" left="20" right="20" top="20"/>
     </padding>
@@ -23,7 +22,8 @@
         <Label fx:id="lblHoraAtual" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
         <Label text="Motivo:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-        <TextArea fx:id="motivoReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="60" prefWidth="200"/>
+        <TextArea fx:id="motivoReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="60"
+                  prefWidth="200"/>
 
         <Label text="Nova Data:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
         <DatePicker fx:id="dataReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="4"/>

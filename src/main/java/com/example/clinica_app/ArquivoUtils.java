@@ -2,7 +2,10 @@ package com.example.clinica_app;
 
 import java.io.*;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class ArquivoUtils {
@@ -15,10 +18,7 @@ public class ArquivoUtils {
     public static void salvarPacientes(List<Paciente> pacientes) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO_PACIENTES))) {
             for (Paciente p : pacientes) {
-                String linha = p.getIdPaciente() + "," +
-                        p.getNome() + "," +
-                        p.getIdade() + "," +
-                        p.getContato();
+                String linha = p.getIdPaciente() + "," + p.getNome() + "," + p.getIdade() + "," + p.getContato();
                 writer.write(linha);
                 writer.newLine();
             }
@@ -56,9 +56,7 @@ public class ArquivoUtils {
     public static void salvarMedicos(List<Medico> medicos) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO_MEDICOS))) {
             for (Medico m : medicos) {
-                String linha = m.getIdMedico() + "," +
-                        m.getNome() + "," +
-                        m.getEspecialidade();
+                String linha = m.getIdMedico() + "," + m.getNome() + "," + m.getEspecialidade();
                 writer.write(linha);
                 writer.newLine();
             }
@@ -98,15 +96,7 @@ public class ArquivoUtils {
             for (Consulta consulta : novasConsultas) {
                 String idPaciente = consulta.getPaciente() != null ? consulta.getPaciente().getIdPaciente() : "";
                 String idMedico = consulta.getMedico() != null ? consulta.getMedico().getIdMedico() : "";
-                String linha = String.join(",",
-                        consulta.getIdConsulta(),
-                        idPaciente,
-                        idMedico,
-                        consulta.getDataHoraInicio().toString(),
-                        consulta.getDataHoraFim().toString(),
-                        consulta.getStatus(),
-                        consulta.getMotivoCancelamento() != null ? consulta.getMotivoCancelamento() : ""
-                );
+                String linha = String.join(",", consulta.getIdConsulta(), idPaciente, idMedico, consulta.getDataHoraInicio().toString(), consulta.getDataHoraFim().toString(), consulta.getStatus(), consulta.getMotivoCancelamento() != null ? consulta.getMotivoCancelamento() : "");
                 writer.write(linha);
                 writer.newLine();
             }
@@ -115,17 +105,10 @@ public class ArquivoUtils {
         }
 
         // Recarrega as consultas do arquivo e sincroniza as agendas dos médicos
-        List<Consulta> consultasAtualizadas = carregarConsultas(
-                AppContext.sistema.getTodosPacientes().stream()
-                        .collect(Collectors.toMap(Paciente::getIdPaciente, p -> p)),
-                AppContext.sistema.getTodosMedicos().stream()
-                        .collect(Collectors.toMap(Medico::getIdMedico, m -> m))
-        );
+        List<Consulta> consultasAtualizadas = carregarConsultas(AppContext.sistema.getTodosPacientes().stream().collect(Collectors.toMap(Paciente::getIdPaciente, p -> p)), AppContext.sistema.getTodosMedicos().stream().collect(Collectors.toMap(Medico::getIdMedico, m -> m)));
 
         for (Medico medico : AppContext.sistema.getTodosMedicos()) {
-            List<Consulta> consultasMedico = consultasAtualizadas.stream()
-                    .filter(c -> c.getMedico() != null && c.getMedico().getIdMedico().equals(medico.getIdMedico()))
-                    .collect(Collectors.toList());
+            List<Consulta> consultasMedico = consultasAtualizadas.stream().filter(c -> c.getMedico() != null && c.getMedico().getIdMedico().equals(medico.getIdMedico())).collect(Collectors.toList());
             TreeMap<LocalDateTime, Consulta> agenda = AppContext.sistema.getAgendaMedico(medico.getIdMedico());
             agenda.clear();
             for (Consulta consulta : consultasMedico) {

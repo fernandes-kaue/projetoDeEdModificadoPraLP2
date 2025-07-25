@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MainApp extends Application {
+    public static void main(String[] args) {
+        launch();
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         // Carregar pacientes e médicos
@@ -20,18 +24,15 @@ public class MainApp extends Application {
         for (Medico m : medicos) AppContext.sistema.registrarMedico(m);
 
         // Carregar consultas e associar
-        Map<String, Paciente> mapaPacientes = pacientes.stream()
-                .collect(Collectors.toMap(Paciente::getIdPaciente, p -> p));
-        Map<String, Medico> mapaMedicos = medicos.stream()
-                .collect(Collectors.toMap(Medico::getIdMedico, m -> m));
+        Map<String, Paciente> mapaPacientes = pacientes.stream().collect(Collectors.toMap(Paciente::getIdPaciente, p -> p));
+        Map<String, Medico> mapaMedicos = medicos.stream().collect(Collectors.toMap(Medico::getIdMedico, m -> m));
         List<Consulta> consultas = ArquivoUtils.carregarConsultas(mapaPacientes, mapaMedicos);
 
         // Adiciona as consultas nas agendas dos médicos
         for (Consulta c : consultas) {
             String idMedico = c.getMedico().getIdMedico();
             if (AppContext.sistema.isMedico(idMedico)) {
-                AppContext.sistema.getAgendaMedico(idMedico)
-                        .put(c.getDataHoraInicio(), c);
+                AppContext.sistema.getAgendaMedico(idMedico).put(c.getDataHoraInicio(), c);
             }
         }
 
@@ -40,9 +41,5 @@ public class MainApp extends Application {
         stage.setTitle("Agendamento de Consultas Médicas");
         stage.setScene(scene);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch();
     }
 }

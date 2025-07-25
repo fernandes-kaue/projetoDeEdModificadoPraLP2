@@ -41,6 +41,7 @@ public class Paciente {
     public void removerConsultaDoHistorico(String idConsulta) {
         historicoConsultas.removeIf(c -> c.getIdConsulta().equals(idConsulta));
     }
+
     public String getContato() {
         return this.contato;
     }

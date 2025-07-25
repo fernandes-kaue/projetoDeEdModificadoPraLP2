@@ -1,46 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<AnchorPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
+    <children>
+        <Label layoutX="326.0" layoutY="14.0" style="-fx-font-size: 20px; -fx-font-weight: bold;"
+               text="Área do Médico"/>
+        <Button layoutX="20.0" layoutY="28.0" onAction="#onVoltarTelaInicial" text="Voltar ao Menu Principal"/>
 
-<AnchorPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
-   <children>
-      <Label layoutX="326.0" layoutY="14.0" style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Área do Médico" />
-      <Button layoutX="20.0" layoutY="28.0" onAction="#onVoltarTelaInicial" text="Voltar ao Menu Principal" />
+        <Label layoutX="116.0" layoutY="61.0" text="Cadastrar Disponibilidade:"/>
+        <HBox layoutX="116.0" layoutY="83.0" spacing="10">
+            <children>
+                <DatePicker fx:id="dataDisponibilidade"/>
+                <TextField fx:id="horaInicio" promptText="Hora início (ex: 14:00)"/>
+                <TextField fx:id="horaFim" promptText="Hora fim (ex: 14:30)"/>
+                <Button onAction="#onCadastrarDisponibilidade" text="Confirmar"/>
+            </children>
+        </HBox>
 
-      <Label layoutX="116.0" layoutY="61.0" text="Cadastrar Disponibilidade:" />
-      <HBox layoutX="116.0" layoutY="83.0" spacing="10">
-         <children>
-            <DatePicker fx:id="dataDisponibilidade" />
-            <TextField fx:id="horaInicio" promptText="Hora início (ex: 14:00)" />
-            <TextField fx:id="horaFim" promptText="Hora fim (ex: 14:30)" />
-            <Button onAction="#onCadastrarDisponibilidade" text="Confirmar" />
-         </children>
-      </HBox>
+        <Label layoutX="251.0" layoutY="129.0" text="Minhas Consultas:"/>
+        <TableView fx:id="tabelaConsultas" layoutX="251.0" layoutY="150.0" prefHeight="200.0" prefWidth="526.0">
+            <columns>
+                <TableColumn fx:id="colConsultaData" maxWidth="73.0" minWidth="73.0" prefWidth="73.0" text="Data"/>
+                <TableColumn fx:id="colConsultaHora" maxWidth="82.0" minWidth="80.0" prefWidth="82.0" text="Hora"/>
+                <TableColumn fx:id="colConsultaPaciente" maxWidth="190.0" minWidth="188.0" prefWidth="188.0"
+                             text="Paciente"/>
+                <TableColumn fx:id="colConsultaNumero" maxWidth="100.0" minWidth="93.0" prefWidth="93.0"
+                             text="Contato"/>
+                <TableColumn fx:id="colConsultaStatus" maxWidth="89.0" minWidth="69.0" prefWidth="89.0" text="Status"/>
+            </columns>
+        </TableView>
+        <!-- Remove cancel button for doctors -->
+        <Button layoutX="251.0" layoutY="357.0" onAction="#onConfirmarConsulta" text="Confirmar Consulta"/>
+        <Button layoutX="251.0" layoutY="390.0" onAction="#onReagendarConsultaMedico" text="Reagendar Consulta"/>
 
-      <Label layoutX="251.0" layoutY="129.0" text="Minhas Consultas:" />
-      <TableView fx:id="tabelaConsultas" layoutX="251.0" layoutY="150.0" prefHeight="200.0" prefWidth="526.0">
-         <columns>
-            <TableColumn fx:id="colConsultaData" maxWidth="73.0" minWidth="73.0" prefWidth="73.0" text="Data" />
-            <TableColumn fx:id="colConsultaHora" maxWidth="82.0" minWidth="80.0" prefWidth="82.0" text="Hora" />
-            <TableColumn fx:id="colConsultaPaciente" maxWidth="190.0" minWidth="188.0" prefWidth="188.0" text="Paciente" />
-            <TableColumn fx:id="colConsultaNumero" maxWidth="100.0" minWidth="93.0" prefWidth="93.0" text="Contato" />
-            <TableColumn fx:id="colConsultaStatus" maxWidth="89.0" minWidth="69.0" prefWidth="89.0" text="Status" />
-         </columns>
-      </TableView>
-      <!-- Remove cancel button for doctors -->
-      <Button layoutX="251.0" layoutY="357.0" onAction="#onConfirmarConsulta" text="Confirmar Consulta" />
-      <Button layoutX="251.0" layoutY="390.0" onAction="#onReagendarConsultaMedico" text="Reagendar Consulta" />
-
-      <Label layoutX="20.0" layoutY="129.0" text="Minha Agenda:" />
-      <TableView fx:id="tabelaAgenda" layoutX="21.0" layoutY="150.0" prefHeight="200.0" prefWidth="200.0">
-         <columns>
-            <TableColumn fx:id="colAgendaData" prefWidth="99.0" text="Data" />
-            <TableColumn fx:id="colAgendaHora" prefWidth="100.0" text="Hora" />
-         </columns>
-      </TableView>
-      <Button layoutX="21.0" layoutY="357.0" onAction="#onCancelarDisponibilidade" prefWidth="200.0" text="Cancelar Disponibilidade" />
-   </children>
+        <Label layoutX="20.0" layoutY="129.0" text="Minha Agenda:"/>
+        <TableView fx:id="tabelaAgenda" layoutX="21.0" layoutY="150.0" prefHeight="200.0" prefWidth="200.0">
+            <columns>
+                <TableColumn fx:id="colAgendaData" prefWidth="99.0" text="Data"/>
+                <TableColumn fx:id="colAgendaHora" prefWidth="100.0" text="Hora"/>
+            </columns>
+        </TableView>
+        <Button layoutX="21.0" layoutY="357.0" onAction="#onCancelarDisponibilidade" prefWidth="200.0"
+                text="Cancelar Disponibilidade"/>
+    </children>
 </AnchorPane>
