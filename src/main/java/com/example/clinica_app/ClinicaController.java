@@ -488,12 +488,12 @@ public class ClinicaController {
 
 
         if (comboEspecialidades != null) {
-            // Adiciona listener para mudanças de seleção
+            // Configura listener para mudanças de seleção
             comboEspecialidades.getSelectionModel().selectedItemProperty().addListener(
                     (obs, oldVal, newVal) -> atualizarListaDisponibilidadesPorEspecialidade()
             );
 
-            // Carrega as especialidades (isso agora vai selecionar automaticamente a primeira)
+            // Carrega as especialidades (já seleciona "Todas" por padrão)
             carregarEspecialidades();
         }
 
@@ -517,6 +517,9 @@ public class ClinicaController {
     private void carregarEspecialidades() {
         comboEspecialidades.getItems().clear();
 
+        // Adiciona a opção "Todas" primeiro
+        comboEspecialidades.getItems().add("Todas as consultas");
+
         // Get all unique specialties that actually have available appointments
         Set<String> especialidadesComDisponibilidade = AppContext.sistema.getTodasConsultasDisponiveis()
                 .stream()
@@ -525,22 +528,16 @@ public class ClinicaController {
                 .filter(especialidade -> especialidade != null && !especialidade.isEmpty())
                 .collect(Collectors.toSet());
 
-        if (especialidadesComDisponibilidade.isEmpty()) {
-            mostrarAlerta(Alert.AlertType.INFORMATION,
-                    "Nenhuma especialidade com horários disponíveis no momento.");
-        } else {
-            comboEspecialidades.getItems().addAll(especialidadesComDisponibilidade);
+        // Adiciona as especialidades reais
+        comboEspecialidades.getItems().addAll(especialidadesComDisponibilidade);
 
-            // Seleciona a primeira especialidade automaticamente
-            if (!especialidadesComDisponibilidade.isEmpty()) {
-                comboEspecialidades.getSelectionModel().selectFirst();
+        // Seleciona "Todas" por padrão
+        comboEspecialidades.getSelectionModel().selectFirst();
 
-                // Força a atualização imediata da lista, independentemente do número de especialidades
-                Platform.runLater(() -> {
-                    atualizarListaDisponibilidadesPorEspecialidade();
-                });
-            }
-        }
+        // Atualiza a lista imediatamente (mostrando todas)
+        Platform.runLater(() -> {
+            atualizarListaDisponibilidadesPorEspecialidade();
+        });
     }
 
 
@@ -827,12 +824,23 @@ public class ClinicaController {
 
         String especialidadeSelecionada = comboEspecialidades.getValue();
 
-        if (especialidadeSelecionada == null || especialidadeSelecionada.isEmpty()) {
-            listaDisponibilidades.getItems().clear();
+        // Se for "Todas" ou nenhuma selecionada, mostra todas as consultas disponíveis
+        if (especialidadeSelecionada == null || especialidadeSelecionada.equals("Todas as consultas")) {
+            List<Consulta> todasConsultas = AppContext.sistema.getTodasConsultasDisponiveis()
+                    .stream()
+                    .filter(consulta -> "DISPONIVEL".equals(consulta.getStatus()))
+                    .sorted(Comparator.comparing(Consulta::getDataHoraInicio))
+                    .collect(Collectors.toList());
+
+            listaDisponibilidades.getItems().setAll(todasConsultas);
+
+            if (todasConsultas.isEmpty()) {
+                listaDisponibilidades.setPlaceholder(new Label("Nenhum horário disponível no momento"));
+            }
             return;
         }
 
-        // Get all available appointments for the selected specialty
+        // Filtra por especialidade específica
         List<Consulta> consultasDisponiveis = AppContext.sistema.getTodasConsultasDisponiveis()
                 .stream()
                 .filter(consulta -> consulta.getMedico() != null)
@@ -841,10 +849,8 @@ public class ClinicaController {
                 .sorted(Comparator.comparing(Consulta::getDataHoraInicio))
                 .collect(Collectors.toList());
 
-        // Update the ListView
         listaDisponibilidades.getItems().setAll(consultasDisponiveis);
 
-        // Mostra mensagem se não houver horários
         if (consultasDisponiveis.isEmpty()) {
             listaDisponibilidades.setPlaceholder(
                     new Label("Nenhum horário disponível para " + especialidadeSelecionada));
