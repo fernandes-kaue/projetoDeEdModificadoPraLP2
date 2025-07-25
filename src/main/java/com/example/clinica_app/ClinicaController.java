@@ -3,7 +3,6 @@ package com.example.clinica_app;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -905,44 +904,12 @@ public class ClinicaController {
     private void configurarDatePicker(DatePicker datePicker) {
         if (datePicker == null) return;
 
-        final String padraoBrasileiro = "dd/MM/yyyy";
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(padraoBrasileiro);
+        // 1. Setup basic configuration
+        final String pattern = "dd/MM/yyyy";
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        datePicker.setPromptText(pattern.toLowerCase());
 
-        // Ajusta o prompt
-        datePicker.setPromptText(padraoBrasileiro.toLowerCase());
-
-        // Pega o TextField interno
-        TextField editor = datePicker.getEditor();
-
-        // Limita a 10 caracteres
-        editor.lengthProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.intValue() > 10) {
-                editor.setText(editor.getText().substring(0, 10));
-            }
-        });
-
-        // Apenas dígitos e barras
-        editor.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.matches("[0-9/]*")) {
-                editor.setText(oldVal);
-            }
-        });
-
-        // Formata ao perder foco
-        editor.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) {
-                formatarData(editor, datePicker, formatter);
-            } else {
-                Platform.runLater(editor::selectAll);
-            }
-        });
-
-        // Formata quando o usuário confirma via ENTER ou fecha o calendário
-        datePicker.setOnAction((ActionEvent e) -> {
-            formatarData(editor, datePicker, formatter);
-        });
-
-        // Converte entre String e LocalDate
+        // 2. Configure the converter
         datePicker.setConverter(new StringConverter<LocalDate>() {
             @Override
             public String toString(LocalDate date) {
@@ -953,82 +920,131 @@ public class ClinicaController {
             public LocalDate fromString(String string) {
                 try {
                     if (string != null && !string.isEmpty()) {
-                        return LocalDate.parse(string, formatter);
+                        return parsePartialDate(string);
                     }
-                } catch (Exception ex) {
-                    // data inválida
+                } catch (Exception e) {
+                    // Invalid date will return null
                 }
                 return null;
             }
         });
+
+        // 3. Configure the editor behavior
+        TextField editor = datePicker.getEditor();
+        setupDateEditor(editor, datePicker, formatter);
     }
 
-    private boolean formatarData(TextField editor,
-                                 DatePicker datePicker,
-                                 DateTimeFormatter formatter) {
-        String texto = editor.getText().trim();
-        if (texto.isEmpty()) {
-            datePicker.setValue(null);
-            return false;
-        }
-
-        // Tenta parse completo
-        try {
-            LocalDate data = LocalDate.parse(texto, formatter);
-            datePicker.setValue(data);
-            editor.setText(formatter.format(data));
-            editor.positionCaret(editor.getText().length());
-            return true;
-        } catch (Exception ex) {
-            // continua para tratamento parcial
-        }
-
-        String apenasDigitos = texto.replaceAll("[^0-9]", "");
-        LocalDate hoje = LocalDate.now();
+    private LocalDate parsePartialDate(String input) {
+        String digitsOnly = input.replaceAll("[^0-9]", "");
+        LocalDate today = LocalDate.now();
 
         try {
-            int dia = hoje.getDayOfMonth();
-            int mes = hoje.getMonthValue();
-            int ano = hoje.getYear();
+            int day = today.getDayOfMonth();
+            int month = today.getMonthValue();
+            int year = today.getYear();
 
-            switch (apenasDigitos.length()) {
-                case 1: case 2: // D ou DD
-                    dia = Integer.parseInt(apenasDigitos);
+            switch (digitsOnly.length()) {
+                case 1: // D
+                    day = Integer.parseInt(digitsOnly.substring(0, 1));
                     break;
-                case 3: case 4: // DD M ou DD MM
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2));
+                case 2: // DD
+                    day = Integer.parseInt(digitsOnly.substring(0, 2));
                     break;
-                case 6: case 8: // DDMMYY ou DDMMYYYY
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2, 4));
-                    ano = (apenasDigitos.length() == 6)
-                            ? 2000 + Integer.parseInt(apenasDigitos.substring(4))
-                            : Integer.parseInt(apenasDigitos.substring(4));
+                case 3: // DD M
+                    day = Integer.parseInt(digitsOnly.substring(0, 2));
+                    month = Integer.parseInt(digitsOnly.substring(2, 3));
+                    break;
+                case 4: // DD MM
+                    day = Integer.parseInt(digitsOnly.substring(0, 2));
+                    month = Integer.parseInt(digitsOnly.substring(2, 4));
+                    break;
+                case 6: // DD MM YY
+                    day = Integer.parseInt(digitsOnly.substring(0, 2));
+                    month = Integer.parseInt(digitsOnly.substring(2, 4));
+                    year = 2000 + Integer.parseInt(digitsOnly.substring(4, 6));
+                    break;
+                case 8: // DD MM YYYY
+                    day = Integer.parseInt(digitsOnly.substring(0, 2));
+                    month = Integer.parseInt(digitsOnly.substring(2, 4));
+                    year = Integer.parseInt(digitsOnly.substring(4, 8));
                     break;
                 default:
-                    throw new IllegalArgumentException("Formato inválido");
+                    throw new IllegalArgumentException("Invalid date format");
             }
 
-            // Ajusta valores válidos
-            mes = Math.max(1, Math.min(mes, 12));
-            LocalDate base = LocalDate.of(ano, mes, 1);
-            int maxDias = base.lengthOfMonth();
-            dia = Math.max(1, Math.min(dia, maxDias));
+            // Validate and adjust values
+            month = Math.max(1, Math.min(12, month));
+            LocalDate base = LocalDate.of(year, month, 1);
+            int maxDays = base.lengthOfMonth();
+            day = Math.max(1, Math.min(maxDays, day));
 
-            LocalDate resultado = LocalDate.of(ano, mes, dia);
-            String textoFormatado = formatter.format(resultado);
+            return LocalDate.of(year, month, day);
+        } catch (Exception e) {
+            throw new DateTimeParseException("Failed to parse partial date", input, 0, e);
+        }
+    }
 
-            datePicker.setValue(resultado);
-            editor.setText(textoFormatado);
-            editor.positionCaret(textoFormatado.length());
-            return true;
+    private void setupDateEditor(TextField editor, DatePicker datePicker, DateTimeFormatter formatter) {
+        // 1. Limit input length
+        editor.lengthProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 10) { // DD/MM/YYYY is 10 chars
+                Platform.runLater(() -> editor.setText(editor.getText().substring(0, 10)));
+            }
+        });
 
-        } catch (Exception ex) {
-            // Em caso de erro, limpa tudo
+        // 2. Allow only digits and slashes
+        editor.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("^[0-9/]*$")) {
+                Platform.runLater(() -> editor.setText(oldVal));
+            }
+        });
+
+        // 3. Auto-format on focus lost
+        editor.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                formatDateEditor(editor, datePicker, formatter);
+            }
+        });
+
+        // 4. Auto-insert slashes during typing
+        editor.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
+                String digits = newVal.replaceAll("[^0-9]", "");
+                StringBuilder formatted = new StringBuilder();
+
+                for (int i = 0; i < digits.length(); i++) {
+                    if (i == 2 || i == 4) {
+                        formatted.append('/');
+                    }
+                    if (i < 8) { // Limit to 8 digits (DDMMYYYY)
+                        formatted.append(digits.charAt(i));
+                    }
+                }
+
+                if (!newVal.equals(formatted.toString())) {
+                    Platform.runLater(() -> {
+                        editor.setText(formatted.toString());
+                        editor.positionCaret(formatted.length());
+                    });
+                }
+            }
+        });
+    }
+
+    private void formatDateEditor(TextField editor, DatePicker datePicker, DateTimeFormatter formatter) {
+        String text = editor.getText().trim();
+        if (text.isEmpty()) {
+            datePicker.setValue(null);
+            return;
+        }
+
+        try {
+            LocalDate date = parsePartialDate(text);
+            editor.setText(formatter.format(date));
+            datePicker.setValue(date);
+        } catch (Exception e) {
             editor.setText("");
             datePicker.setValue(null);
-            return false;
         }
     }
 }
