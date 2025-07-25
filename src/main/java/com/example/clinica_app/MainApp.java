@@ -19,9 +19,21 @@ public class MainApp extends Application {
         // Carregar pacientes e médicos
         List<Paciente> pacientes = ArquivoUtils.carregarPacientes();
         List<Medico> medicos = ArquivoUtils.carregarMedicos();
+        // Em MainApp.java, após carregar os médicos do arquivo:
+        if (medicos.isEmpty()) {
+            medicos.add(new Medico("CRM123", "Dr. Carlos", "Cardiologia"));
+            medicos.add(new Medico("CRM456", "Dra. Ana", "Dermatologia"));
+            medicos.add(new Medico("CRM789", "Dr. James", "Odontologia"));
+            medicos.add(new Medico("CRM101", "Dra. Maria", "Anestesiologia"));
+            medicos.add(new Medico("CRM102", "Dra. Stephanie", "Ortopedia"));
+
+            ArquivoUtils.salvarMedicos(medicos);
+        }
 
         for (Paciente p : pacientes) AppContext.sistema.registrarPaciente(p);
         for (Medico m : medicos) AppContext.sistema.registrarMedico(m);
+
+
 
         // Carregar consultas e associar
         Map<String, Paciente> mapaPacientes = pacientes.stream().collect(Collectors.toMap(Paciente::getIdPaciente, p -> p));
