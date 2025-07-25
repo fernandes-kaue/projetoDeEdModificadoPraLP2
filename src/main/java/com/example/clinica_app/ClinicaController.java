@@ -17,7 +17,6 @@ import javafx.util.StringConverter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -485,23 +484,6 @@ public class ClinicaController {
         if (dataReagendamento != null) configurarDatePicker(dataReagendamento);
     }
 
-    private String formatarDataDigitada(String input) {
-        if (input == null) return "";
-
-        // Remove tudo que não é dígito
-        String digits = input.replaceAll("[^0-9]", "");
-
-        // Aplica a formatação conforme o tamanho
-        if (digits.length() <= 2) {
-            return digits; // DD
-        } else if (digits.length() <= 4) {
-            return digits.substring(0, 2) + "/" + digits.substring(2); // DD/MM
-        } else if (digits.length() <= 8) {
-            return digits.substring(0, 2) + "/" + digits.substring(2, 4) + "/" + digits.substring(4); // DD/MM/YYYY
-        }
-        return input;
-    }
-
 
     public List<Consulta> getConsultasPaciente(String idPaciente) {
         return sistema.getConsultasPaciente(idPaciente).stream().filter(c -> c.getPaciente() != null && c.getPaciente().getIdPaciente().equals(idPaciente)).collect(Collectors.toList());
@@ -630,19 +612,6 @@ public class ClinicaController {
     }
 
     @FXML
-    public void onConcluirConsulta(ActionEvent event) {
-        Consulta consultaSelecionada = tabelaConsultas.getSelectionModel().getSelectedItem();
-        if (consultaSelecionada == null || !"AGENDADA".equals(consultaSelecionada.getStatus())) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Selecione uma consulta agendada para confirmar.");
-            return;
-        }
-        consultaSelecionada.setStatus("CONCLUIDA");
-        mostrarAlerta(Alert.AlertType.INFORMATION, "Consulta finalizada!");
-        ArquivoUtils.salvarConsultas(AppContext.sistema.getTodosMedicos().stream().flatMap(medico -> AppContext.sistema.getConsultas(medico.getIdMedico()).stream()).collect(Collectors.toList()));
-        atualizarTabelaConsultasMedico(AppContext.usuarioLogadoId);
-    }
-
-    @FXML
     public void onRemoverConsultaMinhasConsultas(ActionEvent event) {
         Consulta consultaSelecionada = tabelaMinhasConsultas.getSelectionModel().getSelectedItem();
         if (consultaSelecionada == null) {
@@ -684,9 +653,6 @@ public class ClinicaController {
 
         AppContext.consultaParaReagendar = consultaSelecionada;
         abrirTela("/view/tela-reagendamento-medico.fxml", "Reagendar Consulta");
-    }
-
-    public void onVerAgenda(ActionEvent actionEvent) {
     }
 
     // O método onAgendarConsultaPaciente não precisa mudar, pois a lógica dele já era pegar uma Consulta da lista.
@@ -733,49 +699,10 @@ public class ClinicaController {
     }
 
     @FXML
-    public void onReagendarConsultaPaciente(ActionEvent actionEvent) {
-        Consulta consultaSelecionada = tabelaMinhasConsultas.getSelectionModel().getSelectedItem();
-
-        if (consultaSelecionada == null) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Selecione uma consulta para reagendar.");
-            return;
-        }
-
-        if ("AGENDADA".equals(consultaSelecionada.getStatus())) {
-            AppContext.consultaParaReagendar = consultaSelecionada;
-            abrirTela("/view/tela-reagendamento-paciente.fxml", "Reagendar Consulta");
-            return;
-        }
-
-        mostrarAlerta(Alert.AlertType.ERROR, "Só é possível reagendar consultas agendadas.");
-    }
-
-    @FXML
     public void onDisponibilidadeSelecionada(MouseEvent event) {
         if (event.getClickCount() == 2) { // Duplo clique
             onAgendarConsultaPaciente(null); // Pode passar null ou criar um ActionEvent
         }
-    }
-
-    // O método onCancelarConsultaPaciente também não precisa mudar.
-    @FXML
-    public void onCancelarConsultaPaciente(ActionEvent actionEvent) {
-        Consulta minhaConsulta = listaMinhasConsultas.getSelectionModel().getSelectedItem();
-        if (minhaConsulta == null) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Selecione uma de suas consultas para cancelar.");
-            return;
-        }
-
-        if (minhaConsulta.getPaciente() == null || !minhaConsulta.getPaciente().getIdPaciente().equals(AppContext.usuarioLogadoId)) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Esta não é uma consulta sua.");
-            return;
-        }
-
-        sistema.cancelarConsultaPorPaciente(minhaConsulta);
-        mostrarAlerta(Alert.AlertType.INFORMATION, "Consulta cancelada com sucesso!");
-        atualizarListaMinhasConsultas(); // Atualiza a lista para remover a consulta cancelada
-
-        mostrarAlerta(Alert.AlertType.INFORMATION, "Consulta cancelada com sucesso!");
     }
 
     /**
@@ -832,9 +759,6 @@ public class ClinicaController {
         if (AppContext.usuarioLogadoId != null) {
             listaMinhasConsultas.getItems().setAll(sistema.getConsultasPaciente(AppContext.usuarioLogadoId));
         }
-    }
-
-    public void onVerConsultasPaciente(ActionEvent actionEvent) {
     }
 
     @FXML
@@ -919,6 +843,20 @@ public class ClinicaController {
     private void configurarFormatadorHora(TextField campo) {
         if (campo == null) return;
 
+        // Limita o campo a 5 caracteres (HH:MM)
+        campo.lengthProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 5) {
+                campo.setText(campo.getText().substring(0, 5));
+            }
+        });
+
+        // Aceita apenas números e dois-pontos
+        campo.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("^[0-9:]*$")) {
+                campo.setText(oldVal);
+            }
+        });
+
         campo.setOnAction(e -> {
             String texto = campo.getText().replaceAll("[^0-9]", "");
 
@@ -928,7 +866,7 @@ public class ClinicaController {
                     if (hora >= 0 && hora <= 23) {
                         campo.setText(String.format("%02d:00", hora));
                     }
-                } else if (texto.length() == 4) { // HHmm
+                } else if (texto.length() == 4) { // HHMM
                     int hora = Integer.parseInt(texto.substring(0, 2));
                     int minuto = Integer.parseInt(texto.substring(2));
                     if (hora >= 0 && hora <= 23 && minuto >= 0 && minuto <= 59) {
@@ -941,126 +879,6 @@ public class ClinicaController {
 
             campo.positionCaret(campo.getText().length());
         });
-    }
-
-    private void formatarHora(TextField campo) {
-        String texto = campo.getText().replaceAll("[^0-9]", "");
-
-        try {
-            if (texto.length() >= 2) {
-                int horas = Integer.parseInt(texto.substring(0, 2));
-                horas = Math.min(23, Math.max(0, horas));
-                String horaFormatada = String.format("%02d", horas);
-
-                if (texto.length() >= 4) {
-                    int minutos = Integer.parseInt(texto.substring(2, 4));
-                    minutos = Math.min(59, Math.max(0, minutos));
-                    horaFormatada += ":" + String.format("%02d", minutos);
-                } else if (texto.length() > 2) {
-                    horaFormatada += ":" + texto.substring(2);
-                }
-
-                campo.setText(horaFormatada);
-            }
-        } catch (NumberFormatException ex) {
-            campo.setText("");
-        }
-    }
-
-    private void configurarFormatadorData(TextField campo) {
-        if (campo == null) return;
-
-        campo.setOnAction(e -> {
-            String texto = campo.getText().replaceAll("[^0-9]", "");
-            LocalDate hoje = LocalDate.now();
-
-            try {
-                if (texto.length() == 2) { // MM
-                    int mes = Integer.parseInt(texto);
-                    if (mes >= 1 && mes <= 12) {
-                        campo.setText(String.format("%02d/%02d/%d", mes, hoje.getMonthValue(), hoje.getYear()));
-                    }
-                } else if (texto.length() == 4) { // DDMM
-                    int dia = Integer.parseInt(texto.substring(0, 2));
-                    int mes = Integer.parseInt(texto.substring(2));
-                    if (mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31) {
-                        campo.setText(String.format("%02d/%02d/%d", dia, mes, hoje.getYear()));
-                    }
-                } else if (texto.length() == 8) { // DDMMYYYY
-                    int dia = Integer.parseInt(texto.substring(0, 2));
-                    int mes = Integer.parseInt(texto.substring(2, 4));
-                    int ano = Integer.parseInt(texto.substring(4));
-                    if (mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31 && ano > 0) {
-                        campo.setText(String.format("%02d/%02d/%d", dia, mes, ano));
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                // Mantém o texto como está se não for possível formatar
-            }
-
-            campo.positionCaret(campo.getText().length());
-        });
-    }
-
-    private void formatarData(TextField campo) {
-        String texto = campo.getText().replaceAll("[^0-9]", "");
-        LocalDate hoje = LocalDate.now();
-
-        try {
-            if (texto.length() == 2) {
-                // Formata como DD/MM/AAAA
-                int dia = Integer.parseInt(texto.substring(0, 2));
-                if (dia >= 1 && dia <= 31) {
-                    campo.setText(String.format("%02d/%02d/%d", dia, hoje.getMonthValue(), hoje.getYear()));
-                }
-            } else if (texto.length() == 4) {
-                // Formata como DD/MM/AAAA
-                int dia = Integer.parseInt(texto.substring(0, 2));
-                int mes = Integer.parseInt(texto.substring(2, 4));
-                if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12) {
-                    campo.setText(String.format("%02d/%02d/%d", dia, mes, hoje.getYear()));
-                }
-            } else if (texto.length() == 8) {
-                // Formata como DD/MM/AAAA
-                int dia = Integer.parseInt(texto.substring(0, 2));
-                int mes = Integer.parseInt(texto.substring(2, 4));
-                int ano = Integer.parseInt(texto.substring(4, 8));
-                if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12) {
-                    campo.setText(String.format("%02d/%02d/%d", dia, mes, ano));
-                }
-            }
-        } catch (NumberFormatException ex) {
-            // Mantém o texto como está se não for número válido
-        }
-    }
-
-    private LocalDate parseDataComAnoAtual(String dataTexto) {
-        if (dataTexto == null || dataTexto.isEmpty()) {
-            return null;
-        }
-
-        String[] partes = dataTexto.split("/");
-        int dia, mes, ano;
-
-        try {
-            dia = Integer.parseInt(partes[0]);
-            mes = Integer.parseInt(partes[1]);
-
-            // Se não tiver ano ou estiver incompleto, usa o ano atual
-            if (partes.length < 3 || partes[2].isEmpty()) {
-                ano = LocalDate.now().getYear();
-            } else {
-                ano = Integer.parseInt(partes[2]);
-                // Se o ano foi digitado com 2 dígitos, assume século 21 (2000 + XX)
-                if (ano < 100) {
-                    ano += 2000;
-                }
-            }
-
-            return LocalDate.of(ano, mes, dia);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private void configurarDatePicker(DatePicker datePicker) {
@@ -1151,11 +969,5 @@ public class ClinicaController {
             editor.setText("");
             datePicker.setValue(null);
         }
-    }
-
-    private int determinarAnoCompleto(String yy) {
-        int ano2Digitos = Integer.parseInt(yy);
-        int anoAtual2Digitos = Year.now().getValue() % 100;
-        return (ano2Digitos > anoAtual2Digitos) ? 1900 + ano2Digitos : 2000 + ano2Digitos;
     }
 }
