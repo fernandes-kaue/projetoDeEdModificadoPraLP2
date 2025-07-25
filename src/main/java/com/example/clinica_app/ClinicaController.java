@@ -917,14 +917,19 @@ public class ClinicaController {
             }
         });
 
-        // Tratamento especial para ENTER e TAB
+        // Tratamento para ENTER - formata e mantém o foco
+        editor.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                formatarData(editor, datePicker, formatter);
+                event.consume();
+            }
+        });
+
+        // Tratamento para TAB - formata e permite a navegação
         editor.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.TAB) {
-                if (formatarData(editor, datePicker, formatter)) {
-                    if (event.getCode() == KeyCode.ENTER) {
-                        event.consume();
-                    }
-                }
+            if (event.getCode() == KeyCode.TAB) {
+                formatarData(editor, datePicker, formatter);
+                // Não consumimos o evento para permitir a navegação
             }
         });
 
@@ -970,6 +975,7 @@ public class ClinicaController {
             LocalDate data = LocalDate.parse(texto, formatter);
             datePicker.setValue(data);
             editor.setText(formatter.format(data));
+            editor.positionCaret(editor.getText().length());
             return true;
         } catch (Exception e) {
             // Continua para o tratamento de datas parciais
@@ -1011,6 +1017,7 @@ public class ClinicaController {
             String dataFormatada = String.format("%02d/%02d/%04d", dia, mes, ano);
             datePicker.setValue(LocalDate.of(ano, mes, dia));
             editor.setText(dataFormatada);
+            editor.positionCaret(editor.getText().length());
             return true;
 
         } catch (Exception e) {
