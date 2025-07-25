@@ -19,7 +19,7 @@ public class MainApp extends Application {
         // Carregar pacientes e médicos
         List<Paciente> pacientes = ArquivoUtils.carregarPacientes();
         List<Medico> medicos = ArquivoUtils.carregarMedicos();
-        // Em MainApp.java, após carregar os médicos do arquivo:
+
         if (medicos.isEmpty()) {
             medicos.add(new Medico("CRM123", "Dr. Carlos", "Cardiologia"));
             medicos.add(new Medico("CRM456", "Dra. Ana", "Dermatologia"));
