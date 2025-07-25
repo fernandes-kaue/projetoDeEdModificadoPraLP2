@@ -3,6 +3,7 @@ package com.example.clinica_app;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -858,28 +860,45 @@ public class ClinicaController {
             }
         });
 
-        campo.setOnAction(e -> {
-            String texto = campo.getText().replaceAll("[^0-9]", "");
-
-            try {
-                if (texto.length() == 2) { // HH
-                    int hora = Integer.parseInt(texto);
-                    if (hora >= 0 && hora <= 23) {
-                        campo.setText(String.format("%02d:00", hora));
-                    }
-                } else if (texto.length() == 4) { // HHMM
-                    int hora = Integer.parseInt(texto.substring(0, 2));
-                    int minuto = Integer.parseInt(texto.substring(2));
-                    if (hora >= 0 && hora <= 23 && minuto >= 0 && minuto <= 59) {
-                        campo.setText(String.format("%02d:%02d", hora, minuto));
-                    }
+        // Formatação ao pressionar Enter ou Tab
+        campo.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.TAB) {
+                formatarHora(campo);
+                if (event.getCode() == KeyCode.ENTER) {
+                    event.consume();
                 }
-            } catch (NumberFormatException ex) {
-                // Mantém o texto como está se não for possível formatar
             }
-
-            campo.positionCaret(campo.getText().length());
         });
+
+        // Formatação ao perder foco
+        campo.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                formatarHora(campo);
+            }
+        });
+    }
+
+    private void formatarHora(TextField campo) {
+        String texto = campo.getText().replaceAll("[^0-9]", "");
+
+        try {
+            if (texto.length() == 2) { // HH
+                int hora = Integer.parseInt(texto);
+                if (hora >= 0 && hora <= 23) {
+                    campo.setText(String.format("%02d:00", hora));
+                }
+            } else if (texto.length() == 4) { // HHMM
+                int hora = Integer.parseInt(texto.substring(0, 2));
+                int minuto = Integer.parseInt(texto.substring(2));
+                if (hora >= 0 && hora <= 23 && minuto >= 0 && minuto <= 59) {
+                    campo.setText(String.format("%02d:%02d", hora, minuto));
+                }
+            }
+        } catch (NumberFormatException ex) {
+            // Mantém o texto como está se não for possível formatar
+        }
+
+        campo.positionCaret(campo.getText().length());
     }
 
     private void configurarDatePicker(DatePicker datePicker) {
@@ -898,16 +917,18 @@ public class ClinicaController {
             }
         });
 
-        // Formata ao pressionar ENTER
-        editor.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                formatarData(editor, datePicker, formatter);
-                editor.selectAll(); // Seleciona todo o texto após formatar
-                event.consume(); // Impede comportamento padrão do ENTER
+        // Tratamento especial para ENTER e TAB
+        editor.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.TAB) {
+                if (formatarData(editor, datePicker, formatter)) {
+                    if (event.getCode() == KeyCode.ENTER) {
+                        event.consume();
+                    }
+                }
             }
         });
 
-        // Formata ao perder o foco
+        // Formatação ao perder foco
         editor.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 formatarData(editor, datePicker, formatter);
@@ -919,10 +940,7 @@ public class ClinicaController {
         datePicker.setConverter(new StringConverter<LocalDate>() {
             @Override
             public String toString(LocalDate date) {
-                if (date != null) {
-                    return formatter.format(date);
-                }
-                return "";
+                return date != null ? formatter.format(date) : "";
             }
 
             @Override
@@ -939,74 +957,66 @@ public class ClinicaController {
         });
     }
 
-    private void formatarData(TextField editor, DatePicker datePicker, DateTimeFormatter formatter) {
+    private boolean formatarData(TextField editor, DatePicker datePicker, DateTimeFormatter formatter) {
         String texto = editor.getText().trim();
+
         if (texto.isEmpty()) {
             datePicker.setValue(null);
-            return;
+            return false;
         }
 
-        // Remove todos os caracteres não numéricos
-        String apenasDigitos = texto.replaceAll("[^0-9]", "");
+        try {
+            // Tenta parsear diretamente se já estiver formatado
+            LocalDate data = LocalDate.parse(texto, formatter);
+            datePicker.setValue(data);
+            editor.setText(formatter.format(data));
+            return true;
+        } catch (Exception e) {
+            // Continua para o tratamento de datas parciais
+        }
 
+        String apenasDigitos = texto.replaceAll("[^0-9]", "");
         LocalDate hoje = LocalDate.now();
-        int dia = hoje.getDayOfMonth();
-        int mes = hoje.getMonthValue();
-        int ano = hoje.getYear();
 
         try {
+            int dia = hoje.getDayOfMonth();
+            int mes = hoje.getMonthValue();
+            int ano = hoje.getYear();
+
             switch (apenasDigitos.length()) {
-                case 1: // D
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 1));
+                case 1: case 2: // D ou DD
+                    dia = Integer.parseInt(apenasDigitos.substring(0, Math.min(apenasDigitos.length(), 2)));
                     break;
-                case 2: // DD
+                case 3: case 4: // DD M ou DD MM
                     dia = Integer.parseInt(apenasDigitos.substring(0, 2));
+                    mes = Integer.parseInt(apenasDigitos.substring(2, Math.min(apenasDigitos.length(), 4)));
                     break;
-                case 3: // DD M
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2, 3));
-                    break;
-                case 4: // DD MM
+                case 6: case 8: // DD MM AA ou DD MM AAAA
                     dia = Integer.parseInt(apenasDigitos.substring(0, 2));
                     mes = Integer.parseInt(apenasDigitos.substring(2, 4));
-                    break;
-                case 6: // DD MM AA
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2, 4));
-                    ano = 2000 + Integer.parseInt(apenasDigitos.substring(4, 6));
-                    break;
-                case 8: // DD MM AAAA
-                    dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2, 4));
-                    ano = Integer.parseInt(apenasDigitos.substring(4, 8));
+                    ano = apenasDigitos.length() == 6 ?
+                            2000 + Integer.parseInt(apenasDigitos.substring(4, 6)) :
+                            Integer.parseInt(apenasDigitos.substring(4, 8));
                     break;
                 default:
                     throw new IllegalArgumentException("Formato inválido");
             }
 
-            // Validação dos valores
-            if (mes < 1 || mes > 12) {
-                throw new IllegalArgumentException("Mês inválido");
-            }
-
+            // Validação e ajuste
+            mes = Math.max(1, Math.min(mes, 12));
             LocalDate data = LocalDate.of(ano, mes, 1);
             int maxDias = data.lengthOfMonth();
-            if (dia < 1 || dia > maxDias) {
-                dia = maxDias; // Ajusta para o último dia do mês
-            }
+            dia = Math.max(1, Math.min(dia, maxDias));
 
             String dataFormatada = String.format("%02d/%02d/%04d", dia, mes, ano);
-            LocalDate dataFinal = LocalDate.of(ano, mes, dia);
-
-            datePicker.setValue(dataFinal);
+            datePicker.setValue(LocalDate.of(ano, mes, dia));
             editor.setText(dataFormatada);
+            return true;
 
         } catch (Exception e) {
-            // Se já estiver no formato correto, mantém
-            if (!texto.matches("\\d{2}/\\d{2}/\\d{4}")) {
-                editor.setText("");
-                datePicker.setValue(null);
-            }
+            editor.setText("");
+            datePicker.setValue(null);
+            return false;
         }
     }
 }
