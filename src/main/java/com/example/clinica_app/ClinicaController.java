@@ -907,42 +907,42 @@ public class ClinicaController {
 
         final String padraoBrasileiro = "dd/MM/yyyy";
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(padraoBrasileiro);
+
+        // Ajusta o prompt
         datePicker.setPromptText(padraoBrasileiro.toLowerCase());
 
-        final TextField editor = datePicker.getEditor();
+        // Pega o TextField interno
+        TextField editor = datePicker.getEditor();
 
-        // Limita o campo a 10 caracteres
+        // Limita a 10 caracteres
         editor.lengthProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.intValue() > 10) {
                 editor.setText(editor.getText().substring(0, 10));
             }
         });
 
-        // Tratamento para ENTER - formata e mantém o foco
-        editor.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                formatarData(editor, datePicker, formatter);
-                event.consume();
+        // Apenas dígitos e barras
+        editor.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("[0-9/]*")) {
+                editor.setText(oldVal);
             }
         });
 
-        // Tratamento para TAB - formata e permite a navegação
-        editor.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.TAB) {
-                formatarData(editor, datePicker, formatter);
-                // Não consumimos o evento para permitir a navegação
-            }
-        });
-
-        // Formatação ao perder foco
-        editor.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
+        // Formata ao perder foco
+        editor.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (!isFocused) {
                 formatarData(editor, datePicker, formatter);
             } else {
                 Platform.runLater(editor::selectAll);
             }
         });
 
+        // Formata quando o usuário confirma via ENTER ou fecha o calendário
+        datePicker.setOnAction((ActionEvent e) -> {
+            formatarData(editor, datePicker, formatter);
+        });
+
+        // Converte entre String e LocalDate
         datePicker.setConverter(new StringConverter<LocalDate>() {
             @Override
             public String toString(LocalDate date) {
@@ -955,31 +955,32 @@ public class ClinicaController {
                     if (string != null && !string.isEmpty()) {
                         return LocalDate.parse(string, formatter);
                     }
-                    return null;
-                } catch (Exception e) {
-                    return null;
+                } catch (Exception ex) {
+                    // data inválida
                 }
+                return null;
             }
         });
     }
 
-    private boolean formatarData(TextField editor, DatePicker datePicker, DateTimeFormatter formatter) {
+    private boolean formatarData(TextField editor,
+                                 DatePicker datePicker,
+                                 DateTimeFormatter formatter) {
         String texto = editor.getText().trim();
-
         if (texto.isEmpty()) {
             datePicker.setValue(null);
             return false;
         }
 
+        // Tenta parse completo
         try {
-            // Tenta parsear diretamente se já estiver formatado
             LocalDate data = LocalDate.parse(texto, formatter);
             datePicker.setValue(data);
             editor.setText(formatter.format(data));
             editor.positionCaret(editor.getText().length());
             return true;
-        } catch (Exception e) {
-            // Continua para o tratamento de datas parciais
+        } catch (Exception ex) {
+            // continua para tratamento parcial
         }
 
         String apenasDigitos = texto.replaceAll("[^0-9]", "");
@@ -992,36 +993,39 @@ public class ClinicaController {
 
             switch (apenasDigitos.length()) {
                 case 1: case 2: // D ou DD
-                    dia = Integer.parseInt(apenasDigitos.substring(0, Math.min(apenasDigitos.length(), 2)));
+                    dia = Integer.parseInt(apenasDigitos);
                     break;
                 case 3: case 4: // DD M ou DD MM
                     dia = Integer.parseInt(apenasDigitos.substring(0, 2));
-                    mes = Integer.parseInt(apenasDigitos.substring(2, Math.min(apenasDigitos.length(), 4)));
+                    mes = Integer.parseInt(apenasDigitos.substring(2));
                     break;
-                case 6: case 8: // DD MM AA ou DD MM AAAA
+                case 6: case 8: // DDMMYY ou DDMMYYYY
                     dia = Integer.parseInt(apenasDigitos.substring(0, 2));
                     mes = Integer.parseInt(apenasDigitos.substring(2, 4));
-                    ano = apenasDigitos.length() == 6 ?
-                            2000 + Integer.parseInt(apenasDigitos.substring(4, 6)) :
-                            Integer.parseInt(apenasDigitos.substring(4, 8));
+                    ano = (apenasDigitos.length() == 6)
+                            ? 2000 + Integer.parseInt(apenasDigitos.substring(4))
+                            : Integer.parseInt(apenasDigitos.substring(4));
                     break;
                 default:
                     throw new IllegalArgumentException("Formato inválido");
             }
 
-            // Validação e ajuste
+            // Ajusta valores válidos
             mes = Math.max(1, Math.min(mes, 12));
-            LocalDate data = LocalDate.of(ano, mes, 1);
-            int maxDias = data.lengthOfMonth();
+            LocalDate base = LocalDate.of(ano, mes, 1);
+            int maxDias = base.lengthOfMonth();
             dia = Math.max(1, Math.min(dia, maxDias));
 
-            String dataFormatada = String.format("%02d/%02d/%04d", dia, mes, ano);
-            datePicker.setValue(LocalDate.of(ano, mes, dia));
-            editor.setText(dataFormatada);
-            editor.positionCaret(editor.getText().length());
+            LocalDate resultado = LocalDate.of(ano, mes, dia);
+            String textoFormatado = formatter.format(resultado);
+
+            datePicker.setValue(resultado);
+            editor.setText(textoFormatado);
+            editor.positionCaret(textoFormatado.length());
             return true;
 
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            // Em caso de erro, limpa tudo
             editor.setText("");
             datePicker.setValue(null);
             return false;
