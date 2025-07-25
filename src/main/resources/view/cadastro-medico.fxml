@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="290.0" prefWidth="300.0" spacing="10" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
+
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20" />
+    </padding>
+   <Button layoutX="30.0" layoutY="172.0" onAction="#onVoltarTelaCadastro" text="Voltar" />
+
+    <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Cadastro de Médico" />
+
+    <TextField fx:id="campoIdMedico" promptText="ID do Médico" />
+    <TextField fx:id="campoNomeMedico" promptText="Nome" />
+    <TextField fx:id="campoEspecialidadeMedico" promptText="Especialidade" />
+
+    <Button onAction="#onCadastrarMedico" text="Cadastrar" />
+</VBox>

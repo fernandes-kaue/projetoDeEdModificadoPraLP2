@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="400" prefWidth="600" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
+   <children>
+      <VBox alignment="TOP_CENTER" layoutX="14.0" layoutY="39.0" spacing="10">
+         <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Agendar Consulta" />
+         <HBox alignment="CENTER" spacing="5">
+            <ComboBox fx:id="comboEspecialidades"
+                      onAction="#atualizarListaDisponibilidadesPorEspecialidade"
+                      prefWidth="200"/>
+         </HBox>
+         <Label text="Consultas Disponíveis" />
+         <ListView fx:id="listaDisponibilidades"
+                   prefHeight="200.0"
+                   prefWidth="572.0"
+                   onMouseClicked="#onDisponibilidadeSelecionada">
+            <placeholder>
+               <Label text="Selecione uma especialidade para ver os horários disponíveis" />
+            </placeholder>
+         </ListView>
+         <Button onAction="#onAgendarConsultaPaciente" text="Agendar Consulta Selecionada" />
+      </VBox>
+      <Button layoutX="14.0" layoutY="14.0" onAction="#onVoltarTelaPaciente" text="Voltar" />
+   </children>
+</AnchorPane>

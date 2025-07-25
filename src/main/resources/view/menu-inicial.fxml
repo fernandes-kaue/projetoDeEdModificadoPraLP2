@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="20" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
+
+    <padding>
+        <Insets bottom="40" left="40" right="40" top="40" />
+    </padding>
+
+    <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="Seja bem-vindo!" />
+    <Label style="-fx-font-size: 14px;" text="Digite o ID de seu usuario:" />
+    <TextField fx:id="campoNomeUsuario" promptText="ID de usuário" />
+    <Button onAction="#verificarUsuarioEAvancar" prefWidth="200" text="Avançar" />
+    <Button onAction="#irparaCadastro" prefWidth="200" text="Ou clique aqui para cadastrar" />
+
+</VBox>

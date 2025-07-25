@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.clinica_app.ClinicaController"
+            xmlns="http://javafx.com/javafx"
+            prefHeight="600" prefWidth="800">
+
+    <top>
+        <Label text="Painel do Médico - Cadastro de Disponibilidade"
+               style="-fx-font-size: 20px; -fx-padding: 10px;"
+               BorderPane.alignment="CENTER"/>
+    </top>
+
+    <center>
+        <!-- Correção aplicada aqui: substituição do padding numérico -->
+        <VBox spacing="20" alignment="CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Data e Hora Início:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <DatePicker fx:id="dataInicioPicker" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <TextField fx:id="horaInicioField" promptText="HH:mm" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+
+                <Label text="Data e Hora Fim:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <DatePicker fx:id="dataFimPicker" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <TextField fx:id="horaFimField" promptText="HH:mm" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+            </GridPane>
+
+            <Button text="Cadastrar Disponibilidade"
+                    fx:id="cadastrarButton"
+                    onAction="#onCadastrarDisponibilidade"/>
+
+            <Label text="Horários Cadastrados:" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="tabelaDisponibilidades">
+                <columns>
+                    <TableColumn text="Início" fx:id="colInicio" prefWidth="150"/>
+                    <TableColumn text="Fim" fx:id="colFim" prefWidth="150"/>
+                    <TableColumn text="Status" fx:id="colStatus" prefWidth="100"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+</BorderPane>
+

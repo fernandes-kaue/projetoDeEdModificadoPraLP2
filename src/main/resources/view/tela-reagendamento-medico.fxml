@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<?import javafx.geometry.Insets?>
+<VBox xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController" spacing="10">
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20"/>
+    </padding>
+
+    <Label text="Reagendar Consulta (Médico)" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <Label text="Paciente:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <Label fx:id="lblPaciente" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <Label text="Data Atual:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Label fx:id="lblDataAtual" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Horário Atual:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <Label fx:id="lblHoraAtual" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label text="Motivo:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <TextArea fx:id="motivoReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="60" prefWidth="200"/>
+
+        <Label text="Nova Data:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+        <DatePicker fx:id="dataReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+        <Label text="Novo Horário (Início):" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+        <TextField fx:id="horaInicioReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="5" promptText="HH:mm"/>
+
+        <Label text="Novo Horário (Fim):" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+        <TextField fx:id="horaFimReagendamento" GridPane.columnIndex="1" GridPane.rowIndex="6" promptText="HH:mm"/>
+    </GridPane>
+
+    <HBox spacing="10">
+        <Button text="Confirmar Reagendamento" onAction="#onConfirmarReagendamentoMedico"/>
+        <Button text="Cancelar" onAction="#onVoltarTelaMedico"/>
+    </HBox>
+</VBox>

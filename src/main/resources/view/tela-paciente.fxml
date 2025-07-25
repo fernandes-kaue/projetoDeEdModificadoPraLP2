@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="400" prefWidth="600" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.clinica_app.ClinicaController">
+   <children>
+      <VBox alignment="CENTER" prefHeight="400.0" prefWidth="600.0" spacing="15.0">
+         <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Área do Paciente">
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
+         </Label>
+         <Button fx:id="btnAgendarConsultas" text="Agendar Consultas" onAction="#abrirTelaAgendarConsulta"/>
+         <Button fx:id="btnMinhasConsultas" text="Minhas Consultas" onAction="#abrirTelaMinhasConsultas"/>
+      </VBox>
+      <Button alignment="TOP_LEFT" layoutX="20.0" layoutY="20.0" onAction="#onVoltarTelaInicial" text="Voltar ao Menu Principal" />
+   </children>
+</AnchorPane>
