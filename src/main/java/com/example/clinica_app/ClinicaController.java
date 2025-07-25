@@ -843,6 +843,7 @@ public class ClinicaController {
         }
     }
 
+
     private void configurarFormatadorHora(TextField campo) {
         if (campo == null) return;
 
