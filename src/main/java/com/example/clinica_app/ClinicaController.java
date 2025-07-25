@@ -1,6 +1,8 @@
 package com.example.clinica_app;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,40 +11,29 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.event.ActionEvent;
-import javafx.scene.Node;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.stage.Window;
+import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableColumn;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.util.StringConverter;
-
-import java.util.Optional;
-import java.time.format.DateTimeFormatter;
-
 public class ClinicaController {
 
+    // Sistema compartilhado
+    private final SistemaAgendamento sistema = AppContext.sistema;
     @FXML
     private TableColumn<Consulta, String> colMinhasConsultaMedico;
     @FXML
     private TableColumn<Consulta, String> colMinhasConsultaEspecialidade;
-
     // Campos do Menu Inicial
     @FXML
     private TextField campoNomeUsuario;
-
     // Campos de Cadastro de Paciente
     @FXML
     private TextField campoIdPaciente;
@@ -52,7 +43,6 @@ public class ClinicaController {
     private TextField campoIdadePaciente;
     @FXML
     private TextField campoContatoPaciente;
-
     // Campos de Cadastro de Médico
     @FXML
     private TextField campoIdMedico;
@@ -60,7 +50,6 @@ public class ClinicaController {
     private TextField campoNomeMedico;
     @FXML
     private TextField campoEspecialidadeMedico;
-
     // Campos de Cadastro de Disponibilidade
     @FXML
     private DatePicker dataDisponibilidade;
@@ -76,7 +65,6 @@ public class ClinicaController {
     private TableColumn<Consulta, LocalDateTime> colFim;
     @FXML
     private TableColumn<Consulta, String> colStatus;
-
     // Campos para a tabela de disponibilidades (agenda)
     @FXML
     private TableView<Consulta> tabelaAgenda;
@@ -84,7 +72,6 @@ public class ClinicaController {
     private TableColumn<Consulta, String> colAgendaData;
     @FXML
     private TableColumn<Consulta, String> colAgendaHora;
-
     // Campos para a tabela de consultas agendadas
     @FXML
     private TableView<Consulta> tabelaConsultas;
@@ -100,7 +87,6 @@ public class ClinicaController {
     private TableColumn<Consulta, String> colConsultaStatus;
     @FXML
     private TextArea motivoCancelamento;
-
     @FXML
     private TableView<Consulta> tabelaMinhasConsultas;
     @FXML
@@ -111,28 +97,38 @@ public class ClinicaController {
     private TableColumn<Consulta, String> colMinhasConsultaStatus;
     @FXML
     private TableColumn<Consulta, String> colMinhasConsultaMotivo;
-
     // --- CAMPOS FXML DA TELA "AGENDAR CONSULTAS" ---
     @FXML
     private ComboBox<String> comboEspecialidades; // MUDOU: Agora é de String
-
     // --- CAMPOS FXML DA TELA "MEDICO" ---
     @FXML
     private ListView<Consulta> listaDisponibilidades;
     @FXML
     private ListView<Consulta> listaConsultas;
-
     // --- CAMPOS FXML DA TELA "MINHAS CONSULTAS" ---
     @FXML
     private ListView<Consulta> listaMinhasConsultas;
     @FXML
     private ListView<Consulta> listaAgenda;
-
-    // Sistema compartilhado
-    private final SistemaAgendamento sistema = AppContext.sistema;
     //test
-
-
+    @FXML
+    private DatePicker dataReagendamento;
+    @FXML
+    private TextField horaInicioReagendamento;
+    @FXML
+    private TextField horaFimReagendamento;
+    @FXML
+    private TextArea motivoReagendamento;
+    @FXML
+    private Label lblMedico;
+    @FXML
+    private Label lblEspecialidade;
+    @FXML
+    private Label lblPaciente;
+    @FXML
+    private Label lblDataAtual;
+    @FXML
+    private Label lblHoraAtual;
 
     // MÉTODO 1: Verifica ID digitado e direciona para tela correspondente
     @FXML
@@ -264,26 +260,6 @@ public class ClinicaController {
         }
     }
 
-
-    @FXML
-    private DatePicker dataReagendamento;
-    @FXML
-    private TextField horaInicioReagendamento;
-    @FXML
-    private TextField horaFimReagendamento;
-    @FXML
-    private TextArea motivoReagendamento;
-    @FXML
-    private Label lblMedico;
-    @FXML
-    private Label lblEspecialidade;
-    @FXML
-    private Label lblPaciente;
-    @FXML
-    private Label lblDataAtual;
-    @FXML
-    private Label lblHoraAtual;
-
     @FXML
     public void onConfirmarReagendamentoPaciente(ActionEvent event) {
         try {
@@ -391,8 +367,7 @@ public class ClinicaController {
     public void initialize() {
 
 //        TODO: formatadores de data e hora automatico
-//        configurarFormatadores();
-
+        configurarFormatadores();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -489,9 +464,7 @@ public class ClinicaController {
 
         if (comboEspecialidades != null) {
             // Configura listener para mudanças de seleção
-            comboEspecialidades.getSelectionModel().selectedItemProperty().addListener(
-                    (obs, oldVal, newVal) -> atualizarListaDisponibilidadesPorEspecialidade()
-            );
+            comboEspecialidades.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> atualizarListaDisponibilidadesPorEspecialidade());
 
             // Carrega as especialidades (já seleciona "Todas" por padrão)
             carregarEspecialidades();
@@ -502,11 +475,31 @@ public class ClinicaController {
 
     private void configurarFormatadores() {
         // Configurar campos de hora
-        configurarFormatadorHora(horaInicio);
-        configurarFormatadorHora(horaFim);
-        configurarFormatadorHora(horaInicioReagendamento);
-        configurarFormatadorHora(horaFimReagendamento);
-        configurarDatePickers();
+        if (horaInicio != null) configurarFormatadorHora(horaInicio);
+        if (horaFim != null) configurarFormatadorHora(horaFim);
+        if (horaInicioReagendamento != null) configurarFormatadorHora(horaInicioReagendamento);
+        if (horaFimReagendamento != null) configurarFormatadorHora(horaFimReagendamento);
+
+        // Configurar DatePickers
+        if (dataDisponibilidade != null) configurarDatePicker(dataDisponibilidade);
+        if (dataReagendamento != null) configurarDatePicker(dataReagendamento);
+    }
+
+    private String formatarDataDigitada(String input) {
+        if (input == null) return "";
+
+        // Remove tudo que não é dígito
+        String digits = input.replaceAll("[^0-9]", "");
+
+        // Aplica a formatação conforme o tamanho
+        if (digits.length() <= 2) {
+            return digits; // DD
+        } else if (digits.length() <= 4) {
+            return digits.substring(0, 2) + "/" + digits.substring(2); // DD/MM
+        } else if (digits.length() <= 8) {
+            return digits.substring(0, 2) + "/" + digits.substring(2, 4) + "/" + digits.substring(4); // DD/MM/YYYY
+        }
+        return input;
     }
 
 
@@ -521,12 +514,7 @@ public class ClinicaController {
         comboEspecialidades.getItems().add("Todas as consultas");
 
         // Get all unique specialties that actually have available appointments
-        Set<String> especialidadesComDisponibilidade = AppContext.sistema.getTodasConsultasDisponiveis()
-                .stream()
-                .filter(c -> c.getMedico() != null)
-                .map(c -> c.getMedico().getEspecialidade())
-                .filter(especialidade -> especialidade != null && !especialidade.isEmpty())
-                .collect(Collectors.toSet());
+        Set<String> especialidadesComDisponibilidade = AppContext.sistema.getTodasConsultasDisponiveis().stream().filter(c -> c.getMedico() != null).map(c -> c.getMedico().getEspecialidade()).filter(especialidade -> especialidade != null && !especialidade.isEmpty()).collect(Collectors.toSet());
 
         // Adiciona as especialidades reais
         comboEspecialidades.getItems().addAll(especialidadesComDisponibilidade);
@@ -726,12 +714,7 @@ public class ClinicaController {
             }
 
             // Tenta agendar a consulta
-            sistema.agendarConsulta(
-                    AppContext.usuarioLogadoId,
-                    consultaSelecionada.getMedico().getIdMedico(),
-                    consultaSelecionada.getDataHoraInicio(),
-                    consultaSelecionada.getDataHoraFim()
-            );
+            sistema.agendarConsulta(AppContext.usuarioLogadoId, consultaSelecionada.getMedico().getIdMedico(), consultaSelecionada.getDataHoraInicio(), consultaSelecionada.getDataHoraFim());
 
             mostrarAlerta(Alert.AlertType.INFORMATION, "Consulta agendada com sucesso!");
 
@@ -739,11 +722,7 @@ public class ClinicaController {
             atualizarListaDisponibilidadesPorEspecialidade();
 
             // Atualiza o arquivo de consultas
-            ArquivoUtils.salvarConsultas(
-                    AppContext.sistema.getTodosMedicos().stream()
-                            .flatMap(medico -> AppContext.sistema.getConsultas(medico.getIdMedico()).stream())
-                            .collect(Collectors.toList())
-            );
+            ArquivoUtils.salvarConsultas(AppContext.sistema.getTodosMedicos().stream().flatMap(medico -> AppContext.sistema.getConsultas(medico.getIdMedico()).stream()).collect(Collectors.toList()));
 
         } catch (IllegalStateException e) {
             mostrarAlerta(Alert.AlertType.ERROR, "Erro ao agendar: " + e.getMessage());
@@ -826,11 +805,7 @@ public class ClinicaController {
 
         // Se for "Todas" ou nenhuma selecionada, mostra todas as consultas disponíveis
         if (especialidadeSelecionada == null || especialidadeSelecionada.equals("Todas as consultas")) {
-            List<Consulta> todasConsultas = AppContext.sistema.getTodasConsultasDisponiveis()
-                    .stream()
-                    .filter(consulta -> "DISPONIVEL".equals(consulta.getStatus()))
-                    .sorted(Comparator.comparing(Consulta::getDataHoraInicio))
-                    .collect(Collectors.toList());
+            List<Consulta> todasConsultas = AppContext.sistema.getTodasConsultasDisponiveis().stream().filter(consulta -> "DISPONIVEL".equals(consulta.getStatus())).sorted(Comparator.comparing(Consulta::getDataHoraInicio)).collect(Collectors.toList());
 
             listaDisponibilidades.getItems().setAll(todasConsultas);
 
@@ -841,19 +816,12 @@ public class ClinicaController {
         }
 
         // Filtra por especialidade específica
-        List<Consulta> consultasDisponiveis = AppContext.sistema.getTodasConsultasDisponiveis()
-                .stream()
-                .filter(consulta -> consulta.getMedico() != null)
-                .filter(consulta -> especialidadeSelecionada.equals(consulta.getMedico().getEspecialidade()))
-                .filter(consulta -> "DISPONIVEL".equals(consulta.getStatus()))
-                .sorted(Comparator.comparing(Consulta::getDataHoraInicio))
-                .collect(Collectors.toList());
+        List<Consulta> consultasDisponiveis = AppContext.sistema.getTodasConsultasDisponiveis().stream().filter(consulta -> consulta.getMedico() != null).filter(consulta -> especialidadeSelecionada.equals(consulta.getMedico().getEspecialidade())).filter(consulta -> "DISPONIVEL".equals(consulta.getStatus())).sorted(Comparator.comparing(Consulta::getDataHoraInicio)).collect(Collectors.toList());
 
         listaDisponibilidades.getItems().setAll(consultasDisponiveis);
 
         if (consultasDisponiveis.isEmpty()) {
-            listaDisponibilidades.setPlaceholder(
-                    new Label("Nenhum horário disponível para " + especialidadeSelecionada));
+            listaDisponibilidades.setPlaceholder(new Label("Nenhum horário disponível para " + especialidadeSelecionada));
         }
     }
 
@@ -949,88 +917,107 @@ public class ClinicaController {
     }
 
     private void configurarFormatadorHora(TextField campo) {
-        campo.setTextFormatter(new TextFormatter<>(change -> {
-            String newText = change.getControlNewText();
+        if (campo == null) return;
 
-            // Permite apagar
-            if (change.isDeleted()) {
-                return change;
+        // Limita o campo a 5 caracteres (HH:mm)
+        campo.lengthProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 5) {
+                campo.setText(campo.getText().substring(0, 5));
             }
+        });
 
-            // Validação básica - apenas dígitos e ":"
-            if (!newText.matches("[0-9:]*")) {
-                return null;
+        campo.setOnAction(e -> {
+            formatarHora(campo);
+            campo.positionCaret(campo.getText().length());
+        });
+
+        campo.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                formatarHora(campo);
+                campo.positionCaret(campo.getText().length());
+            } else {
+                campo.selectAll();
             }
+        });
 
-            // Remove todos os ":" para facilitar a formatação
-            String digits = newText.replaceAll(":", "");
+        // Configuração para autoformatação enquanto digita
+        campo.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
+                String digits = newVal.replaceAll("[^0-9]", "");
 
-            // Limita a 4 dígitos (HHmm)
-            if (digits.length() > 4) {
-                return null;
+                if (digits.length() == 2 && oldVal.length() == 1) {
+                    campo.setText(digits + ":");
+                    campo.positionCaret(3);
+                } else if (digits.length() > 4) {
+                    campo.setText(oldVal);
+                }
             }
+        });
+    }
 
-            // Formatação automática
-            if (digits.length() >= 2) {
-                String formatted = digits.substring(0, 2) + ":" + (digits.length() > 2 ? digits.substring(2) : "");
-                change.setText(formatted.substring(change.getRangeStart(), change.getRangeEnd()));
-                change.setRange(0, change.getControlText().length());
-                change.setText(formatted);
-                change.setCaretPosition(formatted.length());
-                change.setAnchor(formatted.length());
+    private void formatarHora(TextField campo) {
+        String texto = campo.getText().replaceAll("[^0-9]", "");
+
+        try {
+            if (texto.length() >= 2) {
+                int horas = Integer.parseInt(texto.substring(0, 2));
+                horas = Math.min(23, Math.max(0, horas));
+                String horaFormatada = String.format("%02d", horas);
+
+                if (texto.length() >= 4) {
+                    int minutos = Integer.parseInt(texto.substring(2, 4));
+                    minutos = Math.min(59, Math.max(0, minutos));
+                    horaFormatada += ":" + String.format("%02d", minutos);
+                } else if (texto.length() > 2) {
+                    horaFormatada += ":" + texto.substring(2);
+                }
+
+                campo.setText(horaFormatada);
             }
-
-            return change;
-        }));
+        } catch (NumberFormatException ex) {
+            campo.setText("");
+        }
     }
 
     private void configurarFormatadorData(TextField campo) {
-        campo.setTextFormatter(new TextFormatter<>(change -> {
-            String newText = change.getControlNewText();
-
-            // Permite apagar
-            if (change.isDeleted()) {
-                return change;
+        campo.setOnAction(e -> formatarData(campo));
+        campo.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Quando perde o foco
+                formatarData(campo);
             }
+        });
+    }
 
-            // Validação básica - apenas dígitos e "/"
-            if (!newText.matches("[0-9/]*")) {
-                return null;
-            }
+    private void formatarData(TextField campo) {
+        String texto = campo.getText().replaceAll("[^0-9]", "");
+        LocalDate hoje = LocalDate.now();
 
-            // Remove todas as "/" para facilitar a formatação
-            String digits = newText.replaceAll("/", "");
-
-            // Limita a 8 dígitos (DDMMYYYY)
-            if (digits.length() > 8) {
-                return null;
-            }
-
-            // Formatação automática
-            if (digits.length() >= 2) {
-                String formatted = digits.substring(0, 2) + "/";
-                if (digits.length() >= 4) {
-                    formatted += digits.substring(2, 4) + "/";
-                    if (digits.length() > 4) {
-                        // Se o usuário digitou o ano, usa o que foi digitado
-                        formatted += digits.substring(4);
-                    } else {
-                        // Se não digitou o ano, completa com o ano atual
-                        formatted += LocalDate.now().getYear();
-                    }
-                } else {
-                    formatted += digits.substring(2);
+        try {
+            if (texto.length() == 2) {
+                // Formata como DD/MM/AAAA
+                int dia = Integer.parseInt(texto.substring(0, 2));
+                if (dia >= 1 && dia <= 31) {
+                    campo.setText(String.format("%02d/%02d/%d", dia, hoje.getMonthValue(), hoje.getYear()));
                 }
-
-                change.setText(formatted.substring(change.getRangeStart(), change.getRangeEnd()));
-                change.setRange(0, change.getControlText().length());
-                change.setText(formatted);
-                change.setCaretPosition(formatted.length());
-                change.setAnchor(formatted.length());
+            } else if (texto.length() == 4) {
+                // Formata como DD/MM/AAAA
+                int dia = Integer.parseInt(texto.substring(0, 2));
+                int mes = Integer.parseInt(texto.substring(2, 4));
+                if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12) {
+                    campo.setText(String.format("%02d/%02d/%d", dia, mes, hoje.getYear()));
+                }
+            } else if (texto.length() == 8) {
+                // Formata como DD/MM/AAAA
+                int dia = Integer.parseInt(texto.substring(0, 2));
+                int mes = Integer.parseInt(texto.substring(2, 4));
+                int ano = Integer.parseInt(texto.substring(4, 8));
+                if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12) {
+                    campo.setText(String.format("%02d/%02d/%d", dia, mes, ano));
+                }
             }
-
-            return change;
-        }));
+        } catch (NumberFormatException ex) {
+            // Mantém o texto como está se não for número válido
+        }
     }
 
     private LocalDate parseDataComAnoAtual(String dataTexto) {
@@ -1062,44 +1049,99 @@ public class ClinicaController {
         }
     }
 
-    private void configurarDatePickers() {
-        // Configura o formato brasileiro para os DatePickers
+    private void configurarDatePicker(DatePicker datePicker) {
+        if (datePicker == null) return;
+
+        // Configuração básica
         String padraoBrasileiro = "dd/MM/yyyy";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(padraoBrasileiro);
+        datePicker.setPromptText(padraoBrasileiro.toLowerCase());
 
-        dataDisponibilidade.setConverter(new StringConverter<LocalDate>() {
-            final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(padraoBrasileiro);
+        // Limita o campo a 10 caracteres
+        TextField editor = datePicker.getEditor();
+        editor.lengthProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 10) {
+                editor.setText(editor.getText().substring(0, 10));
+            }
+        });
 
+        // Configura o comportamento ao ganhar foco
+        editor.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                Platform.runLater(() -> {
+                    editor.selectAll();
+                });
+            } else {
+                formatarEManterCursor(datePicker, formatter);
+            }
+        });
+
+        // Configura a formatação automática durante a digitação
+        editor.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
+                String digits = newVal.replaceAll("[^0-9]", "");
+
+                if (digits.length() == 2 && !newVal.contains("/")) {
+                    editor.setText(digits + "/");
+                    editor.positionCaret(3);
+                } else if (digits.length() == 4 && newVal.chars().filter(ch -> ch == '/').count() < 2) {
+                    editor.setText(digits.substring(0, 2) + "/" + digits.substring(2) + "/");
+                    editor.positionCaret(6);
+                } else if (digits.length() > 8) {
+                    editor.setText(oldVal);
+                }
+            }
+        });
+
+        // Configura o conversor
+        datePicker.setConverter(new StringConverter<LocalDate>() {
             @Override
             public String toString(LocalDate date) {
-                return date != null ? dateFormatter.format(date) : "";
+                return date != null ? formatter.format(date) : "";
             }
 
             @Override
             public LocalDate fromString(String string) {
-                return string != null && !string.isEmpty()
-                        ? LocalDate.parse(string, dateFormatter)
-                        : null;
+                try {
+                    return string != null && !string.isEmpty() ? LocalDate.parse(string, formatter) : null;
+                } catch (Exception e) {
+                    return null;
+                }
             }
         });
+    }
 
-        dataReagendamento.setConverter(new StringConverter<LocalDate>() {
-            final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(padraoBrasileiro);
+    private void formatarEManterCursor(DatePicker datePicker, DateTimeFormatter formatter) {
+        TextField editor = datePicker.getEditor();
+        String text = editor.getText();
 
-            @Override
-            public String toString(LocalDate date) {
-                return date != null ? dateFormatter.format(date) : "";
+        try {
+            if (text == null || text.trim().isEmpty()) {
+                datePicker.setValue(null);
+                return;
             }
 
-            @Override
-            public LocalDate fromString(String string) {
-                return string != null && !string.isEmpty()
-                        ? LocalDate.parse(string, dateFormatter)
-                        : null;
-            }
-        });
+            // Converte o texto para LocalDate
+            LocalDate date = datePicker.getConverter().fromString(text);
 
-        // Também pode definir um prompt text
-        dataDisponibilidade.setPromptText(padraoBrasileiro.toLowerCase());
-        dataReagendamento.setPromptText(padraoBrasileiro.toLowerCase());
+            // Atualiza o valor
+            datePicker.setValue(date);
+
+            // Se válido, formata e posiciona cursor no final
+            if (date != null) {
+                String formatted = formatter.format(date);
+                editor.setText(formatted);
+                editor.positionCaret(editor.getText().length());
+            }
+        } catch (Exception e) {
+            editor.setText("");
+            datePicker.setValue(null);
+        }
+    }
+
+    private int determinarAnoCompleto(String yy) {
+        int ano2Digitos = Integer.parseInt(yy);
+        int anoAtual2Digitos = Year.now().getValue() % 100;
+        return (ano2Digitos > anoAtual2Digitos) ? 1900 + ano2Digitos : 2000 + ano2Digitos;
     }
 }

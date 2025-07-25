@@ -7,30 +7,38 @@
     <artifactId>clinica-app</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>ClinicaApp</name>
-    <description>Aplicação de Gestão Clínica</description>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <javafx.version>21.0.8</javafx.version>
+        <exec.mainClass>com.example.clinica_app.MainApp</exec.mainClass>
     </properties>
 
     <dependencies>
-        <!-- JavaFX Modules -->
+        <!-- JavaFX Controls -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
+
+        <!-- JavaFX FXML -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
+
+        <!-- JavaFX Base -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
             <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
     </dependencies>
 
@@ -49,15 +57,12 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.example.clinica_app.MainApp</mainClass>
+                    <mainClass>${exec.mainClass}</mainClass>
                     <options>
                         <option>--enable-preview</option>
-                        <option>--add-opens</option>
-                        <option>javafx.graphics/javafx.scene=ALL-UNNAMED</option>
                     </options>
                 </configuration>
             </plugin>
-
 
             <!-- Compiler Plugin -->
             <plugin>
@@ -68,7 +73,6 @@
                     <parameters>true</parameters>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
-                        <arg>-Xlint:all</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
